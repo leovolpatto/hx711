@@ -2,8 +2,17 @@
 #include <inttypes.h>
 #ifdef __arm__
 #include <wiringPi.h>
+#include <unistd.h>
 #endif
 #include "hx711.h"
+
+#ifdef __arm__
+HX711* hxp = NULL;
+
+void readInstance() {
+  hxp->read();
+}
+#endif
 
 HX711::HX711(uint8_t clockPin, uint8_t dataPin) :
   mGainBits(1),
@@ -13,19 +22,14 @@ HX711::HX711(uint8_t clockPin, uint8_t dataPin) :
   mDataPin(dataPin)
 {
 #ifdef __arm__
-  wiringPiSetupPhys();
+  wiringPiSetupGpio();
 
   pinMode(mClockPin, OUTPUT);
   pinMode(mDataPin, INPUT);
-#endif
-}
 
-bool HX711::isReady()
-{
-#ifdef __arm__
-  return digitalRead(mDataPin) == LOW;
-#else
-  return true;
+  hxp = this;
+  // Setup interrupt on falling edge of data pin.
+  wiringPiISR(mDataPin, INT_EDGE_FALLING, readInstance);
 #endif
 }
 
@@ -53,11 +57,9 @@ void HX711::setGain(uint8_t gain)
 #endif
 }
 
-int32_t HX711::read()
-{
+void HX711::read() {
 #ifdef __arm__
-  // wait for the chip to become ready
-  while (!this->isReady());
+  piLock(0);
 
   int32_t data = 0;
   // pulse the clock pin 24 times to read the data
@@ -83,50 +85,58 @@ int32_t HX711::read()
     data |= (long)~0xffffff;
   }
 
-  return data;
+  this->mLatestData = data;
+  this->mSum += this->mLatestData;
+  this->mTimes--;
+  piUnlock(0);
 #else
   return 0;
 #endif
 }
 
-int32_t HX711::readAverage(uint8_t times)
+int32_t HX711::readAverage()
 {
 #ifdef __arm__
-  int64_t sum = 0;
-  for (uint8_t i = 0; i < times; i++)
-  {
-    sum += read();
-  }
-  return sum / times;
+  this->mSum = 0;
+  int8_t times = this->mTimes;
+
+  // TODO: find the sweetspot for best CPU usage and sensor resonse time.
+  // Increasing the sleep time reduces CPU usage yet it might reduce the read speed too.
+  // Fİgure out the sensor response time and set it accordingly.
+  while(this->mTimes >= 1) usleep(100);
+
+  return this->mSum / times;
 #else
   return 0;
 #endif
 }
 
-int32_t HX711::getRawValue(uint8_t times)
+int32_t HX711::getRawValue()
 {
-  return readAverage(times) - mOffset;
+  return readAverage() - mOffset;
 }
 
 float HX711::getUnits(uint8_t times)
 {
-  return getRawValue(times) / mScale;
+  this->mTimes = times;
+  return getRawValue() / mScale;;
 }
 
 void HX711::tare(uint8_t times)
 {
-  uint64_t sum = readAverage(times);
+  this->mTimes = times;
+  uint64_t sum = readAverage();
   setOffset(sum);
 }
 
 void HX711::setScale(float scale)
 {
-  mScale = scale;
+  this->mScale = scale;
 }
 
 void HX711::setOffset(int32_t offset)
 {
-  mOffset = offset;
+  this->mOffset = offset;
 }
 
 void HX711::powerDown()
