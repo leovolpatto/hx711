@@ -50,7 +50,8 @@ Napi::Value HX711Wrapper::read(const Napi::CallbackInfo &info)
   // Read should be called by interrupt provided from WiringPi.
   Napi::Env env = info.Env();
 
-  return Napi::Number::New(env, mSensor->mLatestData);
+  int32_t value = mSensor->getLatestData();
+  return Napi::Number::New(env, value);
 }
 
 void HX711Wrapper::setScale(const Napi::CallbackInfo &info)
@@ -94,6 +95,14 @@ Napi::Value HX711Wrapper::getScale(const Napi::CallbackInfo &info)
   Napi::Env env = info.Env();
 
   float value = mSensor->getScale();
+  return Napi::Number::New(env, value);
+}
+
+Napi::Value HX711Wrapper::getLatestData(const Napi::CallbackInfo &info)
+{
+  Napi::Env env = info.Env();
+
+  int32_t value = mSensor->getLatestData();
   return Napi::Number::New(env, value);
 }
 

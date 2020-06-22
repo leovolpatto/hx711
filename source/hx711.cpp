@@ -165,3 +165,7 @@ float HX711::getScale()
 {
   return this->mScale;
 }
+
+int32_t HX711::getLatestData() {
+  return this->mLatestData;
+}

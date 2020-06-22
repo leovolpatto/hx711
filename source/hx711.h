@@ -31,5 +31,6 @@ public:
   void powerUp();
   int32_t getOffset();
   float getScale();
+  int32_t getLatestData();
 
 };

@@ -1,7 +1,7 @@
 {
   "name": "@ataberkylmz/hx711",
-  "version": "0.0.6",
-  "description": "Less CPU intensice C Driver and Node Binding for HX711 Load Cell Amplifier",
+  "version": "0.0.7",
+  "description": "Less CPU intensive C Driver and Node Binding for HX711 Load Cell Amplifier",
   "main": "index.js",
   "scripts": {
     "test": "true",
