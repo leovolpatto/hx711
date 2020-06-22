@@ -1,7 +1,7 @@
 {
   "name": "@ataberkylmz/hx711",
   "version": "0.0.5",
-  "description": "A native Node.js module to interface with the HX711 load cell amplifier",
+  "description": "Less CPU intensice C Driver and Node Binding for HX711 Load Cell Amplifier",
   "main": "index.js",
   "scripts": {
     "test": "true",
