@@ -86,8 +86,10 @@ void HX711::read() {
   }
 
   this->mLatestData = data;
-  this->mSum += this->mLatestData;
-  this->mTimes--;
+  if(this->mTimes >= 0) {
+    this->mSum += this->mLatestData;
+    this->mTimes--;
+  }
   piUnlock(0);
 #else
   return 0;
