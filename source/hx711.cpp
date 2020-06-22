@@ -92,7 +92,7 @@ void HX711::read() {
   }
   piUnlock(0);
 #else
-  return 0;
+  this->mLatestData = 0;
 #endif
 }
 
