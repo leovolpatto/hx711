@@ -16,9 +16,9 @@ private:
   uint8_t mDataPin;
   uint8_t mTimes;
   bool mReading;
-  bool isReady;
 
 public:
+  bool mDataReady;
   HX711(uint8_t clockPin, uint8_t dataPin);
   void setGain(uint8_t gain);
   void read();
