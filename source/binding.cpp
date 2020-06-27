@@ -12,7 +12,10 @@ void HX711Wrapper::Init(Napi::Env env, Napi::Object exports)
     InstanceMethod("tare", &HX711Wrapper::tare),
     InstanceMethod("getUnits", &HX711Wrapper::getUnits),
     InstanceMethod("getScale", &HX711Wrapper::getScale),
-    InstanceMethod("getOffset", &HX711Wrapper::getOffset)
+    InstanceMethod("getOffset", &HX711Wrapper::getOffset),
+    InstanceMethod("powerDown", &HX711Wrapper::powerDown),
+    InstanceMethod("powerUp", &HX711Wrapper::powerUp)
+
   });
 
   constructor = Napi::Persistent(func);
