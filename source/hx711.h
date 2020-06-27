@@ -15,10 +15,11 @@ private:
   uint8_t mClockPin;
   uint8_t mDataPin;
   uint8_t mTimes;
+  bool mReading;
+  bool isReady;
 
 public:
   HX711(uint8_t clockPin, uint8_t dataPin);
-  bool isReady();
   void setGain(uint8_t gain);
   void read();
   int32_t readAverage();

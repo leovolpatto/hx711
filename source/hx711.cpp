@@ -10,6 +10,7 @@
 HX711* hxp = NULL;
 
 void readInstance() {
+  hxp->mDataReady = true;
   hxp->read();
 }
 #endif
@@ -30,6 +31,8 @@ HX711::HX711(uint8_t clockPin, uint8_t dataPin) :
   hxp = this;
   // Setup interrupt on falling edge of data pin.
   wiringPiISR(mDataPin, INT_EDGE_FALLING, readInstance);
+  this->mReading = false;
+  this->mDataReady = false;
 #endif
 }
 
@@ -59,38 +62,47 @@ void HX711::setGain(uint8_t gain)
 
 void HX711::read() {
 #ifdef __arm__
-  piLock(0);
+  if (!this->mReading && this->mDataReady) {
+    piLock(0);
+    this->mReading = true;
 
-  int32_t data = 0;
-  // pulse the clock pin 24 times to read the data
-  for (uint8_t i = 24; i--;)
-  {
-    digitalWrite(mClockPin, HIGH);
-    delayMicroseconds(1);
-    digitalWrite(mClockPin, LOW);
+    int32_t data = 0;
+    // pulse the clock pin 24 times to read the data
+    for (uint8_t i = 24; i--;)
+    {
+      digitalWrite(mClockPin, HIGH);
+      delayMicroseconds(1);
+      digitalWrite(mClockPin, LOW);
 
-    data |= (digitalRead(mDataPin) << i);
+      data |= (digitalRead(mDataPin) << i);
+    }
+
+    // set the channel and the gain factor for the next reading
+    for (int i = 0; i < mGainBits; i++)
+    {
+      digitalWrite(mClockPin, HIGH);
+      delayMicroseconds(1);
+      digitalWrite(mClockPin, LOW);
+    }
+
+    if (data & 0x800000)
+    {
+      data |= 0xff000000UL;
+    }
+
+    this->mLatestData = data;
+
+    if((uint) this->mTimes != 0) {
+      this->mSum += this->mLatestData;
+      this->mTimes--;
+    }
+    
+    this->mDataReady = false;
+    this->mReading = false;
+
+    piUnlock(0);
   }
 
-  // set the channel and the gain factor for the next reading
-  for (int i = 0; i < mGainBits; i++)
-  {
-    digitalWrite(mClockPin, HIGH);
-    delayMicroseconds(1);
-    digitalWrite(mClockPin, LOW);
-  }
-
-  if (data & 0x800000)
-  {
-    data |= (long)~0xffffff;
-  }
-
-  this->mLatestData = data;
-  if(this->mTimes >= 0) {
-    this->mSum += this->mLatestData;
-    this->mTimes--;
-  }
-  piUnlock(0);
 #else
   this->mLatestData = 0;
 #endif
@@ -121,7 +133,7 @@ int32_t HX711::getRawValue()
 float HX711::getUnits(uint8_t times)
 {
   this->mTimes = times;
-  return getRawValue() / mScale;;
+  return getRawValue() / mScale;
 }
 
 void HX711::tare(uint8_t times)
@@ -146,6 +158,8 @@ void HX711::powerDown()
 #ifdef __arm__
   digitalWrite(mClockPin, LOW);
   digitalWrite(mClockPin, HIGH);
+  // The sensor powers down after 60 useconds
+  usleep(60);
 #endif
 }
 
