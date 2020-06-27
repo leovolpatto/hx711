@@ -19,6 +19,8 @@ private:
   Napi::Value getScale(const Napi::CallbackInfo &info);
   Napi::Value getOffset(const Napi::CallbackInfo &info);
   Napi::Value getLatestData(const Napi::CallbackInfo &info);
+  void powerDown(const Napi::CallbackInfo &info);
+  void powerUp(const Napi::CallbackInfo &info);
 
   HX711 *mSensor;
 };

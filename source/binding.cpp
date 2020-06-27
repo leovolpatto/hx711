@@ -106,6 +106,16 @@ Napi::Value HX711Wrapper::getLatestData(const Napi::CallbackInfo &info)
   return Napi::Number::New(env, value);
 }
 
+void HX711Wrapper::powerDown(const Napi::CallbackInfo &info)
+{
+  mSensor->powerDown();
+}
+
+void HX711Wrapper::powerUp(const Napi::CallbackInfo &info)
+{
+  mSensor->powerUp();
+}
+
 Napi::Object Init(Napi::Env env, Napi::Object exports)
 {
   HX711Wrapper::Init(env, exports);
