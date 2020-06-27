@@ -63,7 +63,6 @@ void HX711::setGain(uint8_t gain)
 void HX711::read() {
 #ifdef __arm__
   if (!this->mReading && this->mDataReady) {
-    piLock(0);
     this->mReading = true;
 
     int32_t data = 0;
@@ -90,17 +89,14 @@ void HX711::read() {
       data |= 0xff000000UL;
     }
 
-    this->mLatestData = data;
-
-    if((uint) this->mTimes != 0) {
+    if(this->mTimes != 0 && data != -1) {
+      this->mLatestData = data;
       this->mSum += this->mLatestData;
       this->mTimes--;
     }
     
     this->mDataReady = false;
     this->mReading = false;
-
-    piUnlock(0);
   }
 
 #else
